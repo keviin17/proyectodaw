@@ -61,7 +61,14 @@ class CartController
             // Si cantidad es 0 o negativa, eliminar la linea
             $this->cartModel->eliminarLinea($idCarrito, $idUsuario);
         } else {
-            $this->cartModel->actualizar($idCarrito, $idUsuario, $cantidad);
+            // Obtener el stock real del producto para no superar el limite
+            $stock = $this->cartModel->getStockByCarritoId($idCarrito, $idUsuario);
+            if ($stock !== null && $cantidad > $stock) {
+                $cantidad = $stock;
+            }
+            if ($cantidad > 0) {
+                $this->cartModel->actualizar($idCarrito, $idUsuario, $cantidad);
+            }
         }
 
         header('Location: ' . BASE_URL . '/?action=carrito');

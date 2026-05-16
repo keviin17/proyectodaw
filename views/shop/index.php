@@ -63,8 +63,14 @@ require __DIR__ . '/../layout/header.php';
                     <div class="card h-100 shadow-sm product-card position-relative">
                         <?php
                         $tieneOferta = !empty($p['precio_oferta']) && $p['precio_oferta'] > 0;
-                        if ($tieneOferta):
+                        $sinTalla = empty(trim($p['talla'] ?? ''));
+                        $agotado = ($p['stock'] <= 0) || $sinTalla;
+                        if ($agotado):
                         ?>
+                            <span class="badge bg-secondary position-absolute top-0 end-0 m-2">
+                                Agotado
+                            </span>
+                        <?php elseif ($tieneOferta): ?>
                             <span class="badge bg-danger position-absolute top-0 end-0 m-2">
                                 🏷️ Oferta
                             </span>
@@ -81,7 +87,7 @@ require __DIR__ . '/../layout/header.php';
                             <h6 class="card-title"><?= htmlspecialchars($p['nombre']) ?></h6>
                             <p class="text-muted small"><?= htmlspecialchars($p['categoria_nombre']) ?></p>
                             <div class="mt-auto d-flex justify-content-between align-items-center">
-                                <?php if ($tieneOferta): ?>
+                                <?php if ($tieneOferta && !$agotado): ?>
                                     <div>
                                         <span class="text-muted text-decoration-line-through small">
                                             <?= number_format($p['precio'], 2) ?> &euro;
@@ -90,6 +96,10 @@ require __DIR__ . '/../layout/header.php';
                                             <?= number_format($p['precio_oferta'], 2) ?> &euro;
                                         </span>
                                     </div>
+                                <?php elseif ($agotado): ?>
+                                    <span class="fw-bold text-muted fs-5">
+                                        <?= number_format($p['precio'], 2) ?> &euro;
+                                    </span>
                                 <?php else: ?>
                                     <span class="fw-bold text-primary fs-5">
                                         <?= number_format($p['precio'], 2) ?> &euro;
@@ -99,12 +109,13 @@ require __DIR__ . '/../layout/header.php';
                                     <a href="<?= BASE_URL ?>/?action=producto&amp;id=<?= $p['id'] ?>"
                                         class="btn btn-sm btn-outline-primary">Ver</a>
 
-                                    <!-- Botón + : abre modal para elegir talla -->
-                                    <button class="btn btn-sm btn-primary btn-add-to-cart"
+                                    <!-- Botón + : abre modal para elegir talla (o muestra agotado) -->
+                                    <button class="btn btn-sm <?= $agotado ? 'btn-secondary' : 'btn-primary' ?> btn-add-to-cart"
                                         data-id="<?= $p['id'] ?>"
                                         data-nombre="<?= htmlspecialchars($p['nombre']) ?>"
                                         data-tallas="<?= htmlspecialchars($p['talla'] ?? '') ?>"
-                                        title="Añadir al carrito">+</button>
+                                        data-stock="<?= (int)$p['stock'] ?>"
+                                        title="<?= $agotado ? 'Agotado' : 'Añadir al carrito' ?>">+</button>
 
                                     <?php if (!empty($_SESSION['usuario_id'])): ?>
                                         <!-- Botón corazón AJAX — estado inicial desde BD -->
@@ -160,6 +171,11 @@ require __DIR__ . '/../layout/header.php';
                 <p class="text-muted small mb-3" id="modalProductoNombre"></p>
                 <div class="d-flex flex-wrap gap-2 justify-content-center" id="tallasContainer">
                     <!-- Las tallas se renderizan dinámicamente por JavaScript -->
+                </div>
+                <div class="text-center d-none" id="msgAgotado">
+                    <i class="bi bi-x-circle text-danger fs-1 d-block mb-2"></i>
+                    <p class="fw-semibold text-danger mb-1">Producto agotado</p>
+                    <p class="text-muted small">Este producto no tiene stock disponible actualmente.</p>
                 </div>
                 <p class="text-danger small mt-2 d-none" id="tallaError">Por favor selecciona una talla.</p>
             </div>
@@ -253,19 +269,16 @@ require __DIR__ . '/../layout/header.php';
                 container.innerHTML = '';
 
                 if (tallasArr.length === 0) {
-                    // Sin tallas definidas: añadir directamente al carrito sin abrir el modal
-                    const form = document.createElement('form');
-                    form.method = 'POST';
-                    form.action = BASE_URL + '/?action=carrito_anadir';
-                    [['id_producto', productoIdPendiente], ['cantidad', '1'], ['talla', '']].forEach(function([k, v]) {
-                        const input = document.createElement('input');
-                        input.type = 'hidden'; input.name = k; input.value = v;
-                        form.appendChild(input);
-                    });
-                    document.body.appendChild(form);
-                    form.submit();
-                    return; // no abrimos el modal
+                    // Sin tallas definidas: mostrar modal indicando que está agotado
+                    const msgAgotado = document.getElementById('msgAgotado');
+                    const btnConfirmar = document.getElementById('btnConfirmarTalla');
+                    if (msgAgotado) msgAgotado.classList.remove('d-none');
+                    if (btnConfirmar) btnConfirmar.classList.add('d-none');
                 } else {
+                    const msgAgotado = document.getElementById('msgAgotado');
+                    const btnConfirmar = document.getElementById('btnConfirmarTalla');
+                    if (msgAgotado) msgAgotado.classList.add('d-none');
+                    if (btnConfirmar) btnConfirmar.classList.remove('d-none');
                     tallasArr.forEach(function(t) {
                         const b = document.createElement('button');
                         b.type = 'button';

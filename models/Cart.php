@@ -75,4 +75,18 @@ class Cart
         );
         return $stmt->execute([$idUsuario]);
     }
+
+    /** Obtener el stock disponible del producto asociado a una línea de carrito */
+    public function getStockByCarritoId(int $idCarrito, int $idUsuario): ?int
+    {
+        $stmt = $this->pdo->prepare(
+            "SELECT p.stock
+             FROM carrito c
+             JOIN producto p ON c.id_producto = p.id
+             WHERE c.id = ? AND c.id_usuario = ?"
+        );
+        $stmt->execute([$idCarrito, $idUsuario]);
+        $row = $stmt->fetch();
+        return $row ? (int) $row['stock'] : null;
+    }
 }

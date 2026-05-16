@@ -17,7 +17,7 @@ class Wishlist
         $stmt = $this->pdo->prepare(
             "SELECT ld.id, ld.fecha_añadido,
                     p.id AS id_producto, p.nombre, p.precio,
-                    p.imagen, p.precio_oferta
+                    p.imagen, p.precio_oferta, p.talla, p.stock
              FROM lista_deseo ld
              JOIN producto p ON ld.id_producto = p.id
              WHERE ld.id_usuario = ?

@@ -61,7 +61,7 @@ INSERT INTO `categoria` (`id`, `nombre`, `descripcion`, `imagen`, `genero`, `act
 (2, 'Pantalones Hombre', 'Vaqueros, chinos y pantalones de hombre', NULL, 'hombre', 1, '2026-05-03 17:12:49'),
 (3, 'Camisetas Mujer', 'Camisetas y tops para mujer', NULL, 'mujer', 1, '2026-05-03 17:12:49'),
 (4, 'Vestidos', 'Vestidos casuales y de fiesta', NULL, 'mujer', 1, '2026-05-03 17:12:49'),
-(5, 'Ropa Nino', 'Ropa infantil para todas las edades', NULL, 'niño', 1, '2026-05-03 17:12:49'),
+(5, 'Ropa Niño', 'Ropa infantil para todas las edades', NULL, 'niño', 1, '2026-05-03 17:12:49'),
 (6, 'Chaquetas Hombre', 'Chaquetas y abrigos para hombre', NULL, 'hombre', 1, '2026-05-10 11:02:46'),
 (7, 'Calzado Hombre', 'Zapatillas y zapatos para hombre', NULL, 'hombre', 1, '2026-05-10 11:02:46'),
 (8, 'Tops Mujer', 'Tops, blusas y camisas para mujer', NULL, 'mujer', 1, '2026-05-10 11:02:46'),
