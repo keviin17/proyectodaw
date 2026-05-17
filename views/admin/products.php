@@ -218,6 +218,9 @@ require __DIR__ . '/../layout/header.php';
             <form action="<?= BASE_URL ?>/?action=admin_guardar_producto"
                   method="POST" enctype="multipart/form-data">
                 <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
+                <input type="hidden" name="pagina_actual" id="prod_pagina_actual" value="<?= $page ?>">
+                <input type="hidden" name="q_actual" id="prod_q_actual" value="<?= htmlspecialchars($_GET['q'] ?? '') ?>">
+                <input type="hidden" name="categoria_actual" id="prod_categoria_actual" value="<?= $idCategoria ?>">
                 <div class="modal-body">
                     <!-- ID oculto para edición -->
                     <input type="hidden" name="id" id="prod_id" value="0">
@@ -305,9 +308,26 @@ require __DIR__ . '/../layout/header.php';
                         </div>
                         <div class="col-12">
                             <label class="form-label fw-semibold">Imagen del producto</label>
+                            <!-- Imagen actual (solo edición) -->
+                            <div id="imagenActualWrap" style="display:none;" class="mb-2">
+                                <div class="d-flex align-items-center gap-3 p-2 border rounded bg-light">
+                                    <img id="imagenActualPreview" src="" alt="Imagen actual"
+                                         style="width:64px;height:64px;object-fit:cover;border-radius:6px;">
+                                    <div>
+                                        <div class="small text-muted mb-1">Imagen actual: <span id="imagenActualNombre" class="fw-semibold"></span></div>
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox"
+                                                   name="eliminar_imagen" id="chk_eliminar_imagen" value="1">
+                                            <label class="form-check-label text-danger fw-semibold" for="chk_eliminar_imagen">
+                                                <i class="bi bi-trash me-1"></i>Eliminar imagen actual
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                             <input type="file" name="imagen" id="prod_imagen"
                                    class="form-control" accept="image/*">
-                            <div class="form-text">Formatos: JPG, PNG, WEBP. Si no subes imagen se usará la predeterminada.</div>
+                            <div class="form-text">Formatos: JPG, PNG, WEBP. Si no subes imagen nueva se conservará la actual (salvo que marques eliminar).</div>
                         </div>
                     </div>
                 </div>
@@ -323,6 +343,8 @@ require __DIR__ . '/../layout/header.php';
 </div>
 
 <script>
+const IMG_PRODUCTS_URL = '<?= IMG_PRODUCTS_URL ?>';
+
 function togglePrecioOferta(show) {
     const campo = document.getElementById('campo_precio_oferta');
     const input = document.getElementById('prod_precio_oferta');
@@ -346,6 +368,9 @@ function limpiarFormProducto() {
     document.getElementById('prod_en_oferta').checked = false;
     document.getElementById('prod_precio_oferta').value = '';
     document.getElementById('prod_talla').value = '';
+    document.getElementById('prod_imagen').value = '';
+    document.getElementById('imagenActualWrap').style.display = 'none';
+    document.getElementById('chk_eliminar_imagen').checked = false;
     togglePrecioOferta(false);
 }
 
@@ -364,6 +389,20 @@ function editarProducto(p) {
     document.getElementById('prod_en_oferta').checked = tieneOferta;
     document.getElementById('prod_precio_oferta').value = tieneOferta ? p.precio_oferta : '';
     togglePrecioOferta(tieneOferta);
+
+    // Imagen actual
+    const imagenWrap = document.getElementById('imagenActualWrap');
+    const chkEliminar = document.getElementById('chk_eliminar_imagen');
+    chkEliminar.checked = false;
+    if (p.imagen && p.imagen !== 'default.jpg') {
+        document.getElementById('imagenActualPreview').src = IMG_PRODUCTS_URL + '/' + p.imagen;
+        document.getElementById('imagenActualNombre').textContent = p.imagen;
+        imagenWrap.style.display = 'block';
+    } else {
+        imagenWrap.style.display = 'none';
+    }
+    // Limpiar el file input
+    document.getElementById('prod_imagen').value = '';
 }
 </script>
 

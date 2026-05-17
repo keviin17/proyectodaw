@@ -164,9 +164,15 @@ require __DIR__ . '/../layout/header.php';
                                     <?php foreach ($productosBajoStock as $prod): ?>
                                         <li class="list-group-item d-flex justify-content-between align-items-center">
                                             <span class="small"><?= htmlspecialchars($prod['nombre']) ?></span>
-                                            <span class="badge bg-<?= $prod['stock'] <= 3 ? 'danger' : 'warning' ?> text-dark">
-                                                <?= $prod['stock'] ?> uds.
-                                            </span>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <span class="badge bg-<?= $prod['stock'] <= 3 ? 'danger' : 'warning' ?> text-dark">
+                                                    <?= $prod['stock'] ?> uds.
+                                                </span>
+                                                <a href="<?= BASE_URL ?>/?action=admin_productos&q=<?= urlencode($prod['nombre']) ?>"
+                                                   class="btn btn-xs btn-outline-success py-0 px-1" style="font-size:.75rem;" title="Gestionar">
+                                                    Gestionar
+                                                </a>
+                                            </div>
                                         </li>
                                     <?php endforeach; ?>
                                 <?php else: ?>
@@ -175,7 +181,7 @@ require __DIR__ . '/../layout/header.php';
                             </ul>
                         </div>
                         <div class="card-footer bg-white text-end">
-                            <a href="<?= BASE_URL ?>/?action=admin_productos" class="btn btn-sm btn-outline-success">Gestionar</a>
+                            <a href="<?= BASE_URL ?>/?action=admin_productos" class="btn btn-sm btn-outline-secondary">Ver todos los productos</a>
                         </div>
                     </div>
                 </div>

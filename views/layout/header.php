@@ -72,12 +72,9 @@ if (!empty($_SESSION['usuario_id'])) {
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="<?= BASE_URL ?>/?action=catalogo">Todos</a></li>
                         <li><hr class="dropdown-divider"></li>
-                        <li><a class="dropdown-item" href="<?= BASE_URL ?>/?action=catalogo&amp;genero=hombre">
-                            <i class="bi bi-person me-1"></i>Hombre</a></li>
-                        <li><a class="dropdown-item" href="<?= BASE_URL ?>/?action=catalogo&amp;genero=mujer">
-                            <i class="bi bi-person-dress me-1"></i>Mujer</a></li>
-                        <li><a class="dropdown-item" href="<?= BASE_URL ?>/?action=catalogo&amp;genero=ni%C3%B1o">
-                            <i class="bi bi-emoji-smile me-1"></i>Niño</a></li>
+                        <li><a class="dropdown-item" href="<?= BASE_URL ?>/?action=catalogo&amp;genero=hombre">Hombre</a></li>
+                        <li><a class="dropdown-item" href="<?= BASE_URL ?>/?action=catalogo&amp;genero=mujer">Mujer</a></li>
+                        <li><a class="dropdown-item" href="<?= BASE_URL ?>/?action=catalogo&amp;genero=ni%C3%B1o">Niño</a></li>
                     </ul>
                 </li>
             </ul>

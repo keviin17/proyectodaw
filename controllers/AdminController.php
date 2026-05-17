@@ -52,7 +52,7 @@ class AdminController
 
         // Productos con stock bajo (< 10)
         $productosBajoStock = $pdo->query(
-            "SELECT nombre, stock FROM producto
+            "SELECT id, nombre, stock FROM producto
              WHERE activo = 1 AND stock < 10
              ORDER BY stock ASC
              LIMIT 8"
@@ -110,6 +110,12 @@ class AdminController
 
         $id = (int) ($_POST['id'] ?? 0);
 
+        // Parámetros de paginación para volver a la misma página
+        $paginaActual   = max(1, (int) ($_POST['pagina_actual'] ?? 1));
+        $qActual        = urlencode(trim($_POST['q_actual'] ?? ''));
+        $categoriaActual = (int) ($_POST['categoria_actual'] ?? 0);
+        $redirectBase   = BASE_URL . "/?action=admin_productos&pagina={$paginaActual}&q={$qActual}&categoria={$categoriaActual}";
+
         // Calcular precio_oferta: solo si el checkbox "en_oferta" está marcado y hay valor
         $enOferta    = isset($_POST['en_oferta']);
         $precioOferta = ($enOferta && isset($_POST['precio_oferta']) && $_POST['precio_oferta'] !== '')
@@ -130,7 +136,7 @@ class AdminController
         // M1 — Validar que precio_oferta sea menor que precio
         if ($precioOferta !== null && $precioOferta >= $datos['precio']) {
             $_SESSION['error'] = 'El precio de oferta debe ser menor que el precio normal.';
-            header('Location: ' . BASE_URL . '/?action=admin_productos');
+            header('Location: ' . $redirectBase);
             exit;
         }
 
@@ -144,7 +150,7 @@ class AdminController
 
             if (!in_array($ext, $extPermitidas) || !in_array($mime, $mimePermitidos)) {
                 $_SESSION['error'] = 'Solo se permiten imágenes JPG, PNG, WEBP o GIF.';
-                header('Location: ' . BASE_URL . '/?action=admin_productos');
+                header('Location: ' . $redirectBase);
                 exit;
             }
 
@@ -175,18 +181,58 @@ class AdminController
             $nombreImg  = $nombreSlug . '.' . $ext;
             $rutaDestino = $dirDestino . '/' . $nombreImg;
 
-            // Avisar si ya existe un archivo con ese nombre
-            if (file_exists($rutaDestino)) {
-                $_SESSION['error'] = "Ya existe una imagen llamada «{$nombreImg}» en la carpeta /{$subcarpeta}/. "
+            // Si ya existe la imagen (mismo producto editado), sobrescribir directamente.
+            // Solo bloquear si el archivo existente pertenece a OTRO producto distinto.
+            $imagenExistingOwner = null;
+            if ($id > 0 && file_exists($rutaDestino)) {
+                $pdo3  = getConnection();
+                $stmtOwner = $pdo3->prepare("SELECT id FROM producto WHERE imagen = ? AND id != ?");
+                $stmtOwner->execute([$subcarpeta . '/' . $nombreImg, $id]);
+                $imagenExistingOwner = $stmtOwner->fetchColumn();
+            } elseif ($id === 0 && file_exists($rutaDestino)) {
+                // Nuevo producto: no puede haber colisión de nombre si ya existe
+                $imagenExistingOwner = true;
+            }
+
+            if ($imagenExistingOwner) {
+                $_SESSION['error'] = "Ya existe una imagen llamada «{$nombreImg}» en la carpeta /{$subcarpeta}/ y pertenece a otro producto. "
                     . "Renombra el archivo o elimina el existente antes de continuar.";
-                header('Location: ' . BASE_URL . '/?action=admin_productos');
+                header('Location: ' . $redirectBase);
                 exit;
+            }
+
+            // Si el producto ya tenía una imagen distinta, borrarla del disco
+            if ($id > 0) {
+                $pdo4 = getConnection();
+                $stmtOld = $pdo4->prepare("SELECT imagen FROM producto WHERE id = ?");
+                $stmtOld->execute([$id]);
+                $imagenAnterior = $stmtOld->fetchColumn();
+                if ($imagenAnterior && $imagenAnterior !== ($subcarpeta . '/' . $nombreImg)) {
+                    $rutaAnterior = __DIR__ . '/../assets/img/products/' . $imagenAnterior;
+                    if (file_exists($rutaAnterior)) {
+                        @unlink($rutaAnterior);
+                    }
+                }
             }
 
             move_uploaded_file($_FILES['imagen']['tmp_name'], $rutaDestino);
 
             // Guardar en BD como "subcarpeta/nombre.ext" para rutas relativas correctas
             $datos['imagen'] = $subcarpeta . '/' . $nombreImg;
+
+        } elseif ($id > 0 && isset($_POST['eliminar_imagen'])) {
+            // El admin marcó "eliminar imagen actual"
+            $pdo = getConnection();
+            $stmt = $pdo->prepare("SELECT imagen FROM producto WHERE id = ?");
+            $stmt->execute([$id]);
+            $imagenActual = $stmt->fetchColumn();
+            if ($imagenActual && $imagenActual !== 'default.jpg') {
+                $rutaFisica = __DIR__ . '/../assets/img/products/' . $imagenActual;
+                if (file_exists($rutaFisica)) {
+                    @unlink($rutaFisica);
+                }
+            }
+            $datos['imagen'] = null; // Queda sin imagen (usará default)
 
         } elseif ($id > 0) {
             // Al editar sin subir imagen nueva, conservar la imagen actual en BD
@@ -205,12 +251,12 @@ class AdminController
             $result = $product->crear($datos);
             if ($result === -1) {
                 $_SESSION['error'] = 'Ya existe un producto con ese nombre.';
-                header('Location: ' . BASE_URL . '/?action=admin_productos');
+                header('Location: ' . $redirectBase);
                 exit;
             }
             $_SESSION['success'] = "Producto creado correctamente.";
         }
-        header('Location: ' . BASE_URL . '/?action=admin_productos');
+        header('Location: ' . $redirectBase);
         exit;
     }
 
