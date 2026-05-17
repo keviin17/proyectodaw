@@ -4,7 +4,7 @@ if (session_status() === PHP_SESSION_NONE) {
     session_start();
 }
 require_once __DIR__ . '/../../config/constants.php';
-$pageTitle = isset($generoActual) ? ucfirst($generoActual) : 'Catálogo';
+$pageTitle = isset($soloDestacados) ? 'Productos Destacados' : (isset($generoActual) ? ucfirst($generoActual) : 'Catálogo');
 
 // Obtener IDs de productos en la wishlist del usuario para marcar los botones
 $wishlistIds = [];
@@ -25,7 +25,7 @@ require __DIR__ . '/../layout/header.php';
     <div class="container text-center">
         <h1 class="display-4 fw-bold">Nueva Temporada</h1>
         <p class="lead">Descubre los estilos más actuales en Velora Shop</p>
-        <a href="#catalogo" class="btn btn-primary btn-lg">Ver Colección</a>
+        <a href="<?= BASE_URL ?>/?action=destacados" class="btn btn-primary btn-lg">Ver Colección</a>
     </div>
 </section>
 
@@ -33,7 +33,13 @@ require __DIR__ . '/../layout/header.php';
 <div class="container" id="catalogo">
     <div class="row mb-3 align-items-center">
         <div class="col-md-6">
-            <h2 class="mb-0">Nuestros Productos</h2>
+            <h2 class="mb-0">
+                <?php if (!empty($soloDestacados)): ?>
+                    <span class="badge bg-warning text-dark me-2"><i class="bi bi-star-fill"></i></span>Productos Destacados
+                <?php else: ?>
+                    Nuestros Productos
+                <?php endif; ?>
+            </h2>
         </div>
         <div class="col-md-6">
             <form action="<?= BASE_URL ?>/" method="GET" class="d-flex gap-2">
@@ -47,11 +53,31 @@ require __DIR__ . '/../layout/header.php';
     </div>
 
     <!-- FILTROS POR GENERO -->
+    <?php
+        $filtroActivo = $generoActual ?? null;
+        // Si estamos en "todos" (sin género) y no es sólo destacados, el activo es "todos"
+        $activoTodos   = (empty($filtroActivo) && empty($soloDestacados)) ? 'active' : '';
+        $activoHombre  = ($filtroActivo === 'hombre') ? 'active' : '';
+        $activoMujer   = ($filtroActivo === 'mujer')  ? 'active' : '';
+        $activoNino    = ($filtroActivo === 'niño')   ? 'active' : '';
+    ?>
     <div class="mb-4">
-        <a href="<?= BASE_URL ?>/?action=catalogo" class="btn btn-sm btn-outline-secondary me-1">Todos</a>
-        <a href="<?= BASE_URL ?>/?action=catalogo&amp;genero=hombre" class="btn btn-sm btn-outline-primary me-1">Hombre</a>
-        <a href="<?= BASE_URL ?>/?action=catalogo&amp;genero=mujer" class="btn btn-sm btn-outline-danger me-1">Mujer</a>
-        <a href="<?= BASE_URL ?>/?action=catalogo&amp;genero=ni%C3%B1o" class="btn btn-sm btn-outline-success">Niño</a>
+        <a href="<?= BASE_URL ?>/?action=catalogo"
+           class="btn btn-sm me-1 <?= $activoTodos ? 'btn-secondary' : 'btn-outline-secondary' ?>">
+            Todos
+        </a>
+        <a href="<?= BASE_URL ?>/?action=catalogo&amp;genero=hombre"
+           class="btn btn-sm me-1 <?= $activoHombre ? 'btn-primary' : 'btn-outline-primary' ?>">
+            Hombre
+        </a>
+        <a href="<?= BASE_URL ?>/?action=catalogo&amp;genero=mujer"
+           class="btn btn-sm me-1 <?= $activoMujer ? 'btn-danger' : 'btn-outline-danger' ?>">
+            Mujer
+        </a>
+        <a href="<?= BASE_URL ?>/?action=catalogo&amp;genero=ni%C3%B1o"
+           class="btn btn-sm <?= $activoNino ? 'btn-success' : 'btn-outline-success' ?>">
+            Niño
+        </a>
     </div>
 
     <!-- GRID DE PRODUCTOS -->

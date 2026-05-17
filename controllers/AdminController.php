@@ -69,19 +69,33 @@ class AdminController
         $pdo = getConnection();
 
         // Cargar categorías primero para que siempre esté disponible en la vista
-        $categorias = $pdo->query("SELECT * FROM categoria WHERE activo=1")->fetchAll();
+        $categorias = $pdo->query("SELECT * FROM categoria WHERE activo=1 ORDER BY nombre ASC")->fetchAll();
 
-        $q = trim($_GET['q'] ?? '');
+        $q           = trim($_GET['q'] ?? '');
+        $idCategoria = (int) ($_GET['categoria'] ?? 0);
+        $limit       = 15;
+        $page        = max(1, (int) ($_GET['pagina'] ?? 1));
+        $offset      = ($page - 1) * $limit;
+
         $product = new Product();
         if ($q !== '') {
-            $productos = $product->buscar($q);
+            $productos = $product->buscarAdmin($q, $idCategoria);
+            $total     = count($productos);
+            $paginas   = 1;
+            $page      = 1;
         } else {
-            $productos = $product->getAllAdmin();
+            $total     = $product->contarAdmin($idCategoria);
+            $paginas   = (int) ceil($total / $limit);
+            $productos = $product->getAllAdmin($limit, $offset, $idCategoria);
         }
 
         // Exportar al scope global para garantizar visibilidad en la vista
-        $GLOBALS['categorias'] = $categorias;
-        $GLOBALS['productos']  = $productos;
+        $GLOBALS['categorias']   = $categorias;
+        $GLOBALS['productos']    = $productos;
+        $GLOBALS['paginas']      = $paginas;
+        $GLOBALS['page']         = $page;
+        $GLOBALS['total']        = $total;
+        $GLOBALS['idCategoria']  = $idCategoria;
 
         require __DIR__ . '/../views/admin/products.php';
     }
@@ -134,12 +148,46 @@ class AdminController
                 exit;
             }
 
-            $nombreImg = uniqid('prod_') . '.' . $ext;
-            move_uploaded_file(
-                $_FILES['imagen']['tmp_name'],
-                __DIR__ . "/../assets/img/products/{$nombreImg}"
-            );
-            $datos['imagen'] = $nombreImg;
+            // Determinar subcarpeta según el género de la categoría seleccionada
+            $pdo2       = getConnection();
+            $stmtCat    = $pdo2->prepare("SELECT genero FROM categoria WHERE id = ?");
+            $stmtCat->execute([$datos['id_categoria']]);
+            $generoCateg = $stmtCat->fetchColumn() ?: 'unisex';
+
+            // Mapa de género a nombre de carpeta (niño usa "nino" sin tilde en disco)
+            $carpetaMap = [
+                'hombre' => 'hombre',
+                'mujer'  => 'mujer',
+                'niño'   => 'nino',
+                'unisex' => 'unisex',
+            ];
+            $subcarpeta = $carpetaMap[$generoCateg] ?? 'unisex';
+            $dirDestino = __DIR__ . "/../assets/img/products/{$subcarpeta}";
+
+            // Asegurar que la carpeta existe
+            if (!is_dir($dirDestino)) {
+                mkdir($dirDestino, 0775, true);
+            }
+
+            // Nombre de archivo = nombre del producto (slug seguro) + extensión
+            $nombreSlug = preg_replace('/[^a-z0-9_-]/i', '_', $datos['nombre']);
+            $nombreSlug = strtolower(trim($nombreSlug, '_'));
+            $nombreImg  = $nombreSlug . '.' . $ext;
+            $rutaDestino = $dirDestino . '/' . $nombreImg;
+
+            // Avisar si ya existe un archivo con ese nombre
+            if (file_exists($rutaDestino)) {
+                $_SESSION['error'] = "Ya existe una imagen llamada «{$nombreImg}» en la carpeta /{$subcarpeta}/. "
+                    . "Renombra el archivo o elimina el existente antes de continuar.";
+                header('Location: ' . BASE_URL . '/?action=admin_productos');
+                exit;
+            }
+
+            move_uploaded_file($_FILES['imagen']['tmp_name'], $rutaDestino);
+
+            // Guardar en BD como "subcarpeta/nombre.ext" para rutas relativas correctas
+            $datos['imagen'] = $subcarpeta . '/' . $nombreImg;
+
         } elseif ($id > 0) {
             // Al editar sin subir imagen nueva, conservar la imagen actual en BD
             $pdo = getConnection();

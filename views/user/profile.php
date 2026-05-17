@@ -107,8 +107,8 @@ require __DIR__ . '/../layout/header.php';
                 </div>
                 <div class="card-body">
                     <form action="<?= BASE_URL ?>/?action=cambiar_contrasena" method="POST"
-                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                           id="formCambioPass" onsubmit="return validarPass()">
+                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                         <div class="mb-3">
                             <label class="form-label fw-semibold small">Contraseña actual *</label>
                             <input type="password" name="pass_actual" class="form-control form-control-sm"

@@ -88,6 +88,11 @@ switch ($action) {
         $ctrl->buscar();
         break;
 
+    case 'destacados':
+        $ctrl = new ProductController();
+        $ctrl->destacados();
+        break;
+
     case 'producto':
         $ctrl = new ProductController();
         $id = (int) ($_GET['id'] ?? 0);

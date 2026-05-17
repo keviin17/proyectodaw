@@ -94,15 +94,70 @@ class Product
 
     // ── Admin ──────────────────────────────────────────────
 
-    /** Todos los productos (activos e inactivos) para el panel admin */
-    public function getAllAdmin(): array
+    /** Todos los productos (activos e inactivos) para el panel admin con paginación y filtro de categoría */
+    public function getAllAdmin(int $limit = 20, int $offset = 0, int $idCategoria = 0): array
     {
-        return $this->pdo->query(
-            "SELECT p.*, c.nombre AS categoria_nombre
-             FROM producto p
-             JOIN categoria c ON p.id_categoria = c.id
-             ORDER BY p.id DESC"
-        )->fetchAll();
+        if ($idCategoria > 0) {
+            $stmt = $this->pdo->prepare(
+                "SELECT p.*, c.nombre AS categoria_nombre
+                 FROM producto p
+                 JOIN categoria c ON p.id_categoria = c.id
+                 WHERE p.id_categoria = ?
+                 ORDER BY p.id DESC
+                 LIMIT ? OFFSET ?"
+            );
+            $stmt->execute([$idCategoria, $limit, $offset]);
+        } else {
+            $stmt = $this->pdo->prepare(
+                "SELECT p.*, c.nombre AS categoria_nombre
+                 FROM producto p
+                 JOIN categoria c ON p.id_categoria = c.id
+                 ORDER BY p.id DESC
+                 LIMIT ? OFFSET ?"
+            );
+            $stmt->execute([$limit, $offset]);
+        }
+        return $stmt->fetchAll();
+    }
+
+    /** Total de productos admin (para paginación) */
+    public function contarAdmin(int $idCategoria = 0): int
+    {
+        if ($idCategoria > 0) {
+            $stmt = $this->pdo->prepare(
+                "SELECT COUNT(*) FROM producto WHERE id_categoria = ?"
+            );
+            $stmt->execute([$idCategoria]);
+            return (int) $stmt->fetchColumn();
+        }
+        return (int) $this->pdo->query("SELECT COUNT(*) FROM producto")->fetchColumn();
+    }
+
+    /** Búsqueda admin con filtro de categoría opcional */
+    public function buscarAdmin(string $query, int $idCategoria = 0): array
+    {
+        $q = "%{$query}%";
+        if ($idCategoria > 0) {
+            $stmt = $this->pdo->prepare(
+                "SELECT p.*, c.nombre AS categoria_nombre
+                 FROM producto p
+                 JOIN categoria c ON p.id_categoria = c.id
+                 WHERE (p.nombre LIKE ? OR p.descripcion LIKE ?)
+                   AND p.id_categoria = ?
+                 ORDER BY p.nombre ASC"
+            );
+            $stmt->execute([$q, $q, $idCategoria]);
+        } else {
+            $stmt = $this->pdo->prepare(
+                "SELECT p.*, c.nombre AS categoria_nombre
+                 FROM producto p
+                 JOIN categoria c ON p.id_categoria = c.id
+                 WHERE p.nombre LIKE ? OR p.descripcion LIKE ?
+                 ORDER BY p.nombre ASC"
+            );
+            $stmt->execute([$q, $q]);
+        }
+        return $stmt->fetchAll();
     }
 
     /** Crear producto */

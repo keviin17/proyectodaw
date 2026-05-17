@@ -40,6 +40,18 @@ class ProductController
         require __DIR__ . '/../views/shop/index.php';
     }
 
+    /** Solo productos destacados (desde botón Ver Colección) */
+    public function destacados(): void
+    {
+        $productos  = $this->productModel->getDestacados(100);
+        $categorias = $this->categoryModel->getAll();
+        $paginas    = 1;
+        $page       = 1;
+        $soloDestacados = true;
+
+        require __DIR__ . '/../views/shop/index.php';
+    }
+
     /** Catálogo filtrado por género */
     public function catalogoPorGenero(string $genero): void
     {

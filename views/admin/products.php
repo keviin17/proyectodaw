@@ -5,8 +5,12 @@ if (session_status() === PHP_SESSION_NONE) { session_start(); }
 require_once __DIR__ . '/../../config/constants.php';
 
 // Recuperar variables pasadas desde el controller
-$categorias = $GLOBALS['categorias'] ?? [];
-$productos  = $GLOBALS['productos']  ?? [];
+$categorias  = $GLOBALS['categorias']  ?? [];
+$productos   = $GLOBALS['productos']   ?? [];
+$paginas     = $GLOBALS['paginas']     ?? 1;
+$page        = $GLOBALS['page']        ?? 1;
+$total       = $GLOBALS['total']       ?? 0;
+$idCategoria = $GLOBALS['idCategoria'] ?? 0;
 
 $pageTitle = 'Gestión de Productos';
 require __DIR__ . '/../layout/header.php';
@@ -47,18 +51,26 @@ require __DIR__ . '/../layout/header.php';
                     <i class="bi bi-box-seam text-warning me-2"></i>Productos
                 </h2>
                 <div class="d-flex gap-2 align-items-center flex-wrap">
-                    <!-- Mini buscador -->
-                    <form action="<?= BASE_URL ?>/?action=admin_productos" method="GET" class="d-flex gap-1">
+                    <!-- Mini buscador + filtro de categoría -->
+                    <form action="<?= BASE_URL ?>/?action=admin_productos" method="GET" class="d-flex gap-1 flex-wrap">
                         <input type="hidden" name="action" value="admin_productos">
                         <input type="text" name="q" class="form-control form-control-sm"
                                placeholder="Buscar producto..."
                                value="<?= htmlspecialchars($_GET['q'] ?? '') ?>"
-                               style="width:200px;">
+                               style="width:175px;">
+                        <select name="categoria" class="form-select form-select-sm" style="width:195px;">
+                            <option value="0">— Todas las categorías —</option>
+                            <?php foreach ($categorias as $cat): ?>
+                                <option value="<?= $cat['id'] ?>" <?= $idCategoria == $cat['id'] ? 'selected' : '' ?>>
+                                    <?= htmlspecialchars($cat['nombre']) ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
                         <button class="btn btn-sm btn-outline-secondary" type="submit">
                             <i class="bi bi-search"></i>
                         </button>
-                        <?php if (!empty($_GET['q'])): ?>
-                            <a href="<?= BASE_URL ?>/?action=admin_productos" class="btn btn-sm btn-outline-danger" title="Limpiar búsqueda">
+                        <?php if (!empty($_GET['q']) || $idCategoria > 0): ?>
+                            <a href="<?= BASE_URL ?>/?action=admin_productos" class="btn btn-sm btn-outline-danger" title="Limpiar filtros">
                                 <i class="bi bi-x"></i>
                             </a>
                         <?php endif; ?>
@@ -157,6 +169,38 @@ require __DIR__ . '/../layout/header.php';
                     </div>
                 </div>
             </div>
+
+            <!-- Paginación admin -->
+            <?php if (isset($paginas) && $paginas > 1): ?>
+                <nav class="d-flex justify-content-between align-items-center mt-3">
+                    <span class="text-muted small">
+                        <?= $total ?> productos en total &mdash; página <?= $page ?> de <?= $paginas ?>
+                    </span>
+                    <ul class="pagination pagination-sm mb-0">
+                        <?php if ($page > 1): ?>
+                            <li class="page-item">
+                                <a class="page-link" href="<?= BASE_URL ?>/?action=admin_productos&pagina=<?= $page - 1 ?>&q=<?= urlencode($_GET['q'] ?? '') ?>&categoria=<?= $idCategoria ?>">
+                                    <i class="bi bi-chevron-left"></i>
+                                </a>
+                            </li>
+                        <?php endif; ?>
+                        <?php for ($i = max(1, $page - 3); $i <= min($paginas, $page + 3); $i++): ?>
+                            <li class="page-item <?= $i === $page ? 'active' : '' ?>">
+                                <a class="page-link" href="<?= BASE_URL ?>/?action=admin_productos&pagina=<?= $i ?>&q=<?= urlencode($_GET['q'] ?? '') ?>&categoria=<?= $idCategoria ?>">
+                                    <?= $i ?>
+                                </a>
+                            </li>
+                        <?php endfor; ?>
+                        <?php if ($page < $paginas): ?>
+                            <li class="page-item">
+                                <a class="page-link" href="<?= BASE_URL ?>/?action=admin_productos&pagina=<?= $page + 1 ?>&q=<?= urlencode($_GET['q'] ?? '') ?>&categoria=<?= $idCategoria ?>">
+                                    <i class="bi bi-chevron-right"></i>
+                                </a>
+                            </li>
+                        <?php endif; ?>
+                    </ul>
+                </nav>
+            <?php endif; ?>
         </div>
     </div>
 </div>
