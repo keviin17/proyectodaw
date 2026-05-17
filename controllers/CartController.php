@@ -42,6 +42,17 @@ class CartController
             exit;
         }
 
+        // A4 — Verificar stock real antes de añadir al carrito
+        require_once __DIR__ . '/../models/Product.php';
+        $productModel = new Product();
+        $producto = $productModel->getById($idProducto);
+        if (!$producto || $producto['stock'] <= 0) {
+            $_SESSION['error'] = 'Producto sin stock disponible.';
+            header('Location: ' . BASE_URL . '/?action=producto&id=' . $idProducto);
+            exit;
+        }
+        $cantidad = min($cantidad, $producto['stock']);
+
         $this->cartModel->anadir($idUsuario, $idProducto, $cantidad, $talla);
 
         header('Location: ' . BASE_URL . '/?action=carrito');

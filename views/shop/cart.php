@@ -71,6 +71,7 @@ require __DIR__ . '/../layout/header.php';
                                                 <!-- Actualizar cantidad -->
                                                 <form action="<?= BASE_URL ?>/?action=carrito_actualizar"
                                                       method="POST" class="d-flex align-items-center gap-1">
+                                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                                                     <input type="hidden" name="id_carrito" value="<?= $item['id'] ?>">
                                                     <input type="number" name="cantidad"
                                                            value="<?= $item['cantidad'] ?>"
@@ -85,6 +86,7 @@ require __DIR__ . '/../layout/header.php';
                                             </td>
                                             <td>
                                                 <form action="<?= BASE_URL ?>/?action=carrito_eliminar" method="POST">
+                                                    <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                                                     <input type="hidden" name="id_carrito" value="<?= $item['id'] ?>">
                                                     <button type="submit" class="btn btn-sm btn-outline-danger"
                                                             onclick="return confirm('¿Eliminar este artículo?')"

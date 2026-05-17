@@ -108,25 +108,32 @@ class Product
     /** Crear producto */
     public function crear(array $datos): int
     {
-        $stmt = $this->pdo->prepare(
-            "INSERT INTO producto
-             (nombre, descripcion, precio, precio_oferta, stock, imagen,
-              id_categoria, destacado, talla, color)
-             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
-        );
-        $stmt->execute([
-            $datos['nombre'],
-            $datos['descripcion']  ?? null,
-            $datos['precio'],
-            $datos['precio_oferta'] ?? null,
-            $datos['stock'],
-            $datos['imagen']       ?? null,
-            $datos['id_categoria'],
-            $datos['destacado']    ?? 0,
-            $datos['talla']        ?? null,
-            $datos['color']        ?? null,
-        ]);
-        return (int) $this->pdo->lastInsertId();
+        try {
+            $stmt = $this->pdo->prepare(
+                "INSERT INTO producto
+                 (nombre, descripcion, precio, precio_oferta, stock, imagen,
+                  id_categoria, destacado, talla, color)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)"
+            );
+            $stmt->execute([
+                $datos['nombre'],
+                $datos['descripcion']  ?? null,
+                $datos['precio'],
+                $datos['precio_oferta'] ?? null,
+                $datos['stock'],
+                $datos['imagen']       ?? null,
+                $datos['id_categoria'],
+                $datos['destacado']    ?? 0,
+                $datos['talla']        ?? null,
+                $datos['color']        ?? null,
+            ]);
+            return (int) $this->pdo->lastInsertId();
+        } catch (\PDOException $e) {
+            if ($e->getCode() == '23000') {
+                return -1; // Señal de duplicado
+            }
+            throw $e;
+        }
     }
 
     /** Actualizar producto */

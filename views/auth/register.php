@@ -39,6 +39,14 @@ $pageTitle = 'Crear Cuenta';
                 </div>
                 <?php unset($_SESSION['error']); ?>
             <?php endif; ?>
+            <?php if (!empty($_SESSION['success'])): ?>
+                <div class="alert alert-success alert-dismissible fade show" role="alert">
+                    <i class="bi bi-check-circle me-1"></i>
+                    <?= htmlspecialchars($_SESSION['success']) ?>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+                <?php unset($_SESSION['success']); ?>
+            <?php endif; ?>
 
             <!-- Formulario de registro -->
             <div class="card shadow-sm border-0 rounded-4">
@@ -46,6 +54,7 @@ $pageTitle = 'Crear Cuenta';
                     <h5 class="card-title fw-bold mb-4">Crear cuenta</h5>
 
                     <form action="<?= BASE_URL ?>/?action=register" method="POST" class="needs-validation" novalidate>
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
 
                         <div class="mb-3">
                             <label for="nombre" class="form-label small fw-semibold">Nombre completo</label>

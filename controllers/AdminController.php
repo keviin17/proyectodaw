@@ -110,11 +110,30 @@ class AdminController
             'stock'         => (int) ($_POST['stock'] ?? 0),
             'id_categoria'  => (int) ($_POST['id_categoria'] ?? 0),
             'destacado'     => isset($_POST['destacado']) ? 1 : 0,
+            'talla'         => trim($_POST['talla'] ?? '') ?: null,
         ];
 
-        // Manejo de imagen
+        // M1 — Validar que precio_oferta sea menor que precio
+        if ($precioOferta !== null && $precioOferta >= $datos['precio']) {
+            $_SESSION['error'] = 'El precio de oferta debe ser menor que el precio normal.';
+            header('Location: ' . BASE_URL . '/?action=admin_productos');
+            exit;
+        }
+
+        // C3 — Manejo de imagen con validación de extensión y MIME
         if (!empty($_FILES['imagen']['name'])) {
-            $ext       = pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION);
+            $extPermitidas  = ['jpg', 'jpeg', 'png', 'webp', 'gif'];
+            $mimePermitidos = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'];
+
+            $ext  = strtolower(pathinfo($_FILES['imagen']['name'], PATHINFO_EXTENSION));
+            $mime = mime_content_type($_FILES['imagen']['tmp_name']);
+
+            if (!in_array($ext, $extPermitidas) || !in_array($mime, $mimePermitidos)) {
+                $_SESSION['error'] = 'Solo se permiten imágenes JPG, PNG, WEBP o GIF.';
+                header('Location: ' . BASE_URL . '/?action=admin_productos');
+                exit;
+            }
+
             $nombreImg = uniqid('prod_') . '.' . $ext;
             move_uploaded_file(
                 $_FILES['imagen']['tmp_name'],
@@ -134,7 +153,13 @@ class AdminController
             $product->actualizar($id, $datos);
             $_SESSION['success'] = "Producto actualizado correctamente.";
         } else {
-            $product->crear($datos);
+            // M2 — Capturar duplicado de nombre
+            $result = $product->crear($datos);
+            if ($result === -1) {
+                $_SESSION['error'] = 'Ya existe un producto con ese nombre.';
+                header('Location: ' . BASE_URL . '/?action=admin_productos');
+                exit;
+            }
             $_SESSION['success'] = "Producto creado correctamente.";
         }
         header('Location: ' . BASE_URL . '/?action=admin_productos');

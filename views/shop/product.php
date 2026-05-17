@@ -99,6 +99,7 @@ require __DIR__ . '/../layout/header.php';
                 ?>
                 <!-- Formulario añadir al carrito -->
                 <form action="<?= BASE_URL ?>/?action=carrito_anadir" method="POST" class="mb-3">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                     <input type="hidden" name="id_producto" value="<?= $producto['id'] ?>">
                     <div class="row g-2 align-items-end">
                         <?php if ($tieneTallas): ?>
@@ -188,6 +189,7 @@ require __DIR__ . '/../layout/header.php';
                 <div class="card-body">
                     <?php if (!empty($_SESSION['usuario_id'])): ?>
                         <form action="<?= BASE_URL ?>/?action=valorar" method="POST">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                             <input type="hidden" name="id_producto" value="<?= $producto['id'] ?>">
                             <div class="mb-3">
                                 <label class="form-label fw-semibold small">Puntuación *</label>

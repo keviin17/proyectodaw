@@ -123,6 +123,7 @@ require __DIR__ . '/../layout/header.php';
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form action="<?= BASE_URL ?>/?action=admin_cambiar_estado" method="POST">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                 <div class="modal-body">
                     <input type="hidden" name="id_pedido" id="estado_id_pedido">
                     <label class="form-label fw-semibold">Nuevo estado</label>
@@ -174,17 +175,23 @@ function verDetalle(idPedido) {
                 body.innerHTML = '<p class="text-danger text-center">No se pudo cargar el detalle.</p>';
                 return;
             }
-            let html = `<p><strong>Cliente:</strong> ${data.pedido.cliente_nombre} &mdash; ${data.pedido.cliente_email}</p>
-                        <p><strong>Dirección envío:</strong> ${data.pedido.direccion_envio}</p>
-                        <p><strong>Notas:</strong> ${data.pedido.notas || '—'}</p>
+            // A1 — Función de escape para prevenir XSS
+            function esc(str) {
+                const d = document.createElement('div');
+                d.textContent = str ?? '';
+                return d.innerHTML;
+            }
+            let html = `<p><strong>Cliente:</strong> ${esc(data.pedido.cliente_nombre)} &mdash; ${esc(data.pedido.cliente_email)}</p>
+                        <p><strong>Dirección envío:</strong> ${esc(data.pedido.direccion_envio)}</p>
+                        <p><strong>Notas:</strong> ${esc(data.pedido.notas) || '—'}</p>
                         <table class="table table-sm">
                             <thead><tr><th>Producto</th><th>Talla</th><th>Cant.</th><th>Precio/ud.</th><th>Subtotal</th></tr></thead>
                             <tbody>`;
             data.lineas.forEach(l => {
                 html += `<tr>
-                    <td>${l.nombre}</td>
-                    <td>${l.talla || '—'}</td>
-                    <td>${l.cantidad}</td>
+                    <td>${esc(l.nombre)}</td>
+                    <td>${esc(l.talla) || '—'}</td>
+                    <td>${parseInt(l.cantidad)}</td>
                     <td>${parseFloat(l.precio_unitario).toFixed(2)} €</td>
                     <td><strong>${(l.cantidad * l.precio_unitario).toFixed(2)} €</strong></td>
                 </tr>`;

@@ -55,6 +55,7 @@ $pageTitle = 'Iniciar Sesión';
                     <h5 class="card-title fw-bold mb-4">Iniciar sesión</h5>
 
                     <form action="<?= BASE_URL ?>/?action=login" method="POST" class="needs-validation" novalidate>
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
 
                         <div class="mb-3">
                             <label for="email" class="form-label small fw-semibold">Email</label>

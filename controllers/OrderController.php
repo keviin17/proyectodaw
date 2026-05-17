@@ -66,6 +66,18 @@ class OrderController
             exit;
         }
 
+        // M7 — Verificar stock real en el momento de confirmar
+        require_once __DIR__ . '/../models/Product.php';
+        $productModel = new Product();
+        foreach ($items as $item) {
+            $prod = $productModel->getById($item['id_producto']);
+            if (!$prod || $prod['stock'] < $item['cantidad']) {
+                $_SESSION['error'] = 'El producto "' . htmlspecialchars($item['nombre']) . '" no tiene stock suficiente.';
+                header('Location: ' . BASE_URL . '/?action=carrito');
+                exit;
+            }
+        }
+
         $total = array_sum(array_column($items, 'subtotal'));
 
         // Crear el pedido en BD

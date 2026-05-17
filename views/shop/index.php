@@ -63,8 +63,7 @@ require __DIR__ . '/../layout/header.php';
                     <div class="card h-100 shadow-sm product-card position-relative">
                         <?php
                         $tieneOferta = !empty($p['precio_oferta']) && $p['precio_oferta'] > 0;
-                        $sinTalla = empty(trim($p['talla'] ?? ''));
-                        $agotado = ($p['stock'] <= 0) || $sinTalla;
+                        $agotado = ($p['stock'] <= 0);
                         if ($agotado):
                         ?>
                             <span class="badge bg-secondary position-absolute top-0 end-0 m-2">
@@ -251,61 +250,70 @@ require __DIR__ . '/../layout/header.php';
         }
 
         /* ── 2. MODAL TALLAS (botón +) ───────────────────────────── */
+        const CSRF_TOKEN = '<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>';
         let productoIdPendiente = null;
         let tallaSeleccionada = null;
 
         document.querySelectorAll('.btn-add-to-cart').forEach(function(btn) {
             btn.addEventListener('click', function() {
+                const tallasStr = btn.dataset.tallas || '';
+                const tallasArr = tallasStr ? tallasStr.split(',').map(t => t.trim()).filter(t => t) : [];
+
+                // Si no tiene tallas definidas, enviar directamente al carrito sin modal
+                if (tallasArr.length === 0) {
+                    const form = document.createElement('form');
+                    form.method = 'POST';
+                    form.action = BASE_URL + '/?action=carrito_anadir';
+                    [['csrf_token', CSRF_TOKEN], ['id_producto', btn.dataset.id], ['cantidad', '1'], ['talla', '']].forEach(function([k, v]) {
+                        const input = document.createElement('input');
+                        input.type = 'hidden'; input.name = k; input.value = v;
+                        form.appendChild(input);
+                    });
+                    document.body.appendChild(form);
+                    form.submit();
+                    return;
+                }
+
+                // Con tallas: abrir modal para elegir
                 productoIdPendiente = btn.dataset.id;
                 tallaSeleccionada = null;
 
                 document.getElementById('tallaError').classList.add('d-none');
                 document.getElementById('modalProductoNombre').textContent = btn.dataset.nombre;
 
-                // Construir los botones de talla desde data-tallas del producto
-                const tallasStr = btn.dataset.tallas || '';
-                const tallasArr = tallasStr ? tallasStr.split(',').map(t => t.trim()).filter(t => t) : [];
                 const container = document.getElementById('tallasContainer');
                 container.innerHTML = '';
 
-                if (tallasArr.length === 0) {
-                    // Sin tallas definidas: mostrar modal indicando que está agotado
-                    const msgAgotado = document.getElementById('msgAgotado');
-                    const btnConfirmar = document.getElementById('btnConfirmarTalla');
-                    if (msgAgotado) msgAgotado.classList.remove('d-none');
-                    if (btnConfirmar) btnConfirmar.classList.add('d-none');
-                } else {
-                    const msgAgotado = document.getElementById('msgAgotado');
-                    const btnConfirmar = document.getElementById('btnConfirmarTalla');
-                    if (msgAgotado) msgAgotado.classList.add('d-none');
-                    if (btnConfirmar) btnConfirmar.classList.remove('d-none');
-                    tallasArr.forEach(function(t) {
-                        const b = document.createElement('button');
-                        b.type = 'button';
-                        b.className = 'btn btn-outline-secondary btn-talla';
-                        b.dataset.talla = t;
-                        b.textContent = t;
-                        b.addEventListener('click', function() {
-                            container.querySelectorAll('.btn-talla').forEach(function(x) {
-                                x.classList.remove('active', 'btn-dark');
-                                x.classList.add('btn-outline-secondary');
-                            });
-                            b.classList.remove('btn-outline-secondary');
-                            b.classList.add('btn-dark', 'active');
-                            tallaSeleccionada = t;
-                            document.getElementById('tallaError').classList.add('d-none');
-                        });
-                        container.appendChild(b);
-                    });
-                }
+                const msgAgotado = document.getElementById('msgAgotado');
+                const btnConfirmar = document.getElementById('btnConfirmarTalla');
+                if (msgAgotado) msgAgotado.classList.add('d-none');
+                if (btnConfirmar) btnConfirmar.classList.remove('d-none');
 
-                // Abrir el modal
+                tallasArr.forEach(function(t) {
+                    const b = document.createElement('button');
+                    b.type = 'button';
+                    b.className = 'btn btn-outline-secondary btn-talla';
+                    b.dataset.talla = t;
+                    b.textContent = t;
+                    b.addEventListener('click', function() {
+                        container.querySelectorAll('.btn-talla').forEach(function(x) {
+                            x.classList.remove('active', 'btn-dark');
+                            x.classList.add('btn-outline-secondary');
+                        });
+                        b.classList.remove('btn-outline-secondary');
+                        b.classList.add('btn-dark', 'active');
+                        tallaSeleccionada = t;
+                        document.getElementById('tallaError').classList.add('d-none');
+                    });
+                    container.appendChild(b);
+                });
+
                 const modal = new bootstrap.Modal(document.getElementById('modalTalla'));
                 modal.show();
             });
         });
 
-        // Confirmar: enviar al carrito
+        // Confirmar: enviar al carrito con CSRF token
         document.getElementById('btnConfirmarTalla').addEventListener('click', function() {
             if (!tallaSeleccionada) {
                 document.getElementById('tallaError').classList.remove('d-none');
@@ -314,16 +322,9 @@ require __DIR__ . '/../layout/header.php';
             const form = document.createElement('form');
             form.method = 'POST';
             form.action = BASE_URL + '/?action=carrito_anadir';
-            const campos = {
-                id_producto: productoIdPendiente,
-                cantidad: '1',
-                talla: tallaSeleccionada
-            };
-            Object.entries(campos).forEach(function([k, v]) {
+            [['csrf_token', CSRF_TOKEN], ['id_producto', productoIdPendiente], ['cantidad', '1'], ['talla', tallaSeleccionada]].forEach(function([k, v]) {
                 const input = document.createElement('input');
-                input.type = 'hidden';
-                input.name = k;
-                input.value = v;
+                input.type = 'hidden'; input.name = k; input.value = v;
                 form.appendChild(input);
             });
             document.body.appendChild(form);

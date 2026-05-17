@@ -161,8 +161,9 @@ CREATE TABLE `usuario` (
 --
 
 INSERT INTO `usuario` (`id`, `nombre`, `email`, `contraseña`, `rol`, `telefono`, `direccion`, `ciudad`, `codigo_postal`, `activo`, `fecha_registro`) VALUES
-(1, 'Admin Velora', 'admin@velora.com', 'admin', 'admin', NULL, NULL, NULL, NULL, 1, '2026-05-03 17:13:35'),
-(2, 'cliente1', 'cliente@velora.com', 'cliente', 'cliente', NULL, NULL, NULL, NULL, 1, '2026-05-03 17:14:50');
+(1, 'Admin Velora', 'admin@velora.com', '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi', 'admin', NULL, NULL, NULL, NULL, 1, '2026-05-03 17:13:35'),
+(2, 'cliente1', 'cliente@velora.com', '$2y$10$N5oNHZNdN.v.sOCssnEP5eHbuvdRW30KlkaCHRuVHH0fMUb8YmEi2', 'cliente', NULL, NULL, NULL, NULL, 1, '2026-05-03 17:14:50'),
+(3, 'Kevin', 'kevin@gmail.com', '$2y$10$wB5y1ZE.KMy3Oq7kzQpYAekXH.vu7YX2pTBpOtLFhBH1a8CqUo.Cy', 'cliente', NULL, NULL, NULL, NULL, 1, '2026-05-03 17:15:00');
 
 -- --------------------------------------------------------
 
@@ -226,8 +227,6 @@ ALTER TABLE `pedido`
 ALTER TABLE `producto`
   ADD PRIMARY KEY (`id`),
   ADD UNIQUE KEY `nombre` (`nombre`),
-  ADD UNIQUE KEY `nombre_2` (`nombre`),
-  ADD UNIQUE KEY `nombre_3` (`nombre`),
   ADD KEY `id_categoria` (`id_categoria`);
 
 --
@@ -289,7 +288,7 @@ ALTER TABLE `producto`
 -- AUTO_INCREMENT de la tabla `usuario`
 --
 ALTER TABLE `usuario`
-  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` int(11) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
 
 --
 -- AUTO_INCREMENT de la tabla `valoracion`

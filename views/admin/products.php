@@ -97,7 +97,7 @@ require __DIR__ . '/../layout/header.php';
                                         <tr>
                                             <td class="text-muted small">#<?= $p['id'] ?></td>
                                             <td>
-                                                <img src="<?= BASE_URL ?>/assets/img/products/<?= htmlspecialchars($p['imagen'] ?? 'default.jpg') ?>"
+                                                <img src="<?= IMG_PRODUCTS_URL ?>/<?= htmlspecialchars($p['imagen'] ?? 'default.jpg') ?>"
                                                      width="50" height="50"
                                                      style="object-fit:cover; border-radius:6px;">
                                             </td>
@@ -173,6 +173,7 @@ require __DIR__ . '/../layout/header.php';
             </div>
             <form action="<?= BASE_URL ?>/?action=admin_guardar_producto"
                   method="POST" enctype="multipart/form-data">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                 <div class="modal-body">
                     <!-- ID oculto para edición -->
                     <input type="hidden" name="id" id="prod_id" value="0">
@@ -234,6 +235,31 @@ require __DIR__ . '/../layout/header.php';
                             <div class="form-text text-danger">Debe ser menor que el precio normal.</div>
                         </div>
                         <div class="col-12">
+                            <label class="form-label fw-semibold">
+                                <i class="bi bi-rulers me-1"></i>Tallas disponibles
+                            </label>
+                            <div class="d-flex gap-2 flex-wrap mb-2" id="tallasRapidas">
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setTallas('XS,S,M,L,XL')">
+                                    Camisetas (XS–XL)
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setTallas('28,29,30,31,32,33,34,36,38,40')">
+                                    Pantalones (28–40)
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-secondary" onclick="setTallas('35,36,37,38,39,40,41,42,43,44,45')">
+                                    Zapatillas (35–45)
+                                </button>
+                                <button type="button" class="btn btn-sm btn-outline-danger" onclick="setTallas('')">
+                                    <i class="bi bi-x"></i> Borrar
+                                </button>
+                            </div>
+                            <input type="text" name="talla" id="prod_talla"
+                                   class="form-control"
+                                   placeholder="Ej: S,M,L,XL  o  38,39,40,41  (separadas por comas)">
+                            <div class="form-text">
+                                Escribe las tallas separadas por comas, o usa los atajos de arriba. Si el producto no tiene tallas, déjalo vacío.
+                            </div>
+                        </div>
+                        <div class="col-12">
                             <label class="form-label fw-semibold">Imagen del producto</label>
                             <input type="file" name="imagen" id="prod_imagen"
                                    class="form-control" accept="image/*">
@@ -260,6 +286,10 @@ function togglePrecioOferta(show) {
     if (!show) input.value = '';
 }
 
+function setTallas(valor) {
+    document.getElementById('prod_talla').value = valor;
+}
+
 function limpiarFormProducto() {
     document.getElementById('modalProductoTitulo').innerHTML = '<i class="bi bi-box-seam me-2"></i>Nuevo producto';
     document.getElementById('prod_id').value = '0';
@@ -271,6 +301,7 @@ function limpiarFormProducto() {
     document.getElementById('prod_destacado').checked = false;
     document.getElementById('prod_en_oferta').checked = false;
     document.getElementById('prod_precio_oferta').value = '';
+    document.getElementById('prod_talla').value = '';
     togglePrecioOferta(false);
 }
 
@@ -283,6 +314,7 @@ function editarProducto(p) {
     document.getElementById('prod_stock').value = p.stock;
     document.getElementById('prod_categoria').value = p.id_categoria;
     document.getElementById('prod_destacado').checked = p.destacado == 1;
+    document.getElementById('prod_talla').value = p.talla || '';
 
     const tieneOferta = p.precio_oferta !== null && p.precio_oferta !== '' && parseFloat(p.precio_oferta) > 0;
     document.getElementById('prod_en_oferta').checked = tieneOferta;

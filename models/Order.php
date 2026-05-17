@@ -61,29 +61,49 @@ class Order
                           string $direccionEnvio, string $metodoPago = 'tarjeta',
                           string $notas = ''): int
     {
-        // Cabecera del pedido
-        $stmt = $this->pdo->prepare(
-            "INSERT INTO pedido
-             (id_usuario, total, estado, direccion_envio, metodo_pago, notas)
-             VALUES (?, ?, 'pendiente', ?, ?, ?)"
-        );
-        $stmt->execute([$idUsuario, $total, $direccionEnvio, $metodoPago, $notas]);
-        $idPedido = (int) $this->pdo->lastInsertId();
+        $this->pdo->beginTransaction();
+        try {
+            // Cabecera del pedido
+            $stmt = $this->pdo->prepare(
+                "INSERT INTO pedido
+                 (id_usuario, total, estado, direccion_envio, metodo_pago, notas)
+                 VALUES (?, ?, 'pendiente', ?, ?, ?)"
+            );
+            $stmt->execute([$idUsuario, $total, $direccionEnvio, $metodoPago, $notas]);
+            $idPedido = (int) $this->pdo->lastInsertId();
 
-        // Líneas de detalle
-        $ins = $this->pdo->prepare(
-            "INSERT INTO detalle_pedido
-             (id_pedido, id_producto, cantidad, precio_unitario, talla)
-             VALUES (?, ?, ?, ?, ?)"
-        );
-        foreach ($items as $item) {
-            $ins->execute([
-                $idPedido,
-                $item['id_producto'],
-                $item['cantidad'],
-                $item['precio'],
-                $item['talla'] ?? null,
-            ]);
+            // Líneas de detalle
+            $ins = $this->pdo->prepare(
+                "INSERT INTO detalle_pedido
+                 (id_pedido, id_producto, cantidad, precio_unitario, talla)
+                 VALUES (?, ?, ?, ?, ?)"
+            );
+            foreach ($items as $item) {
+                // Usar precio_efectivo si existe (precio oferta), si no precio normal
+                $precioUsado = $item['precio_efectivo'] ?? $item['precio'];
+                $ins->execute([
+                    $idPedido,
+                    $item['id_producto'],
+                    $item['cantidad'],
+                    $precioUsado,
+                    $item['talla'] ?? null,
+                ]);
+            }
+
+            // C2 — Descontar stock tras crear el pedido
+            $updStock = $this->pdo->prepare(
+                "UPDATE producto
+                 SET stock = GREATEST(0, stock - ?)
+                 WHERE id = ?"
+            );
+            foreach ($items as $item) {
+                $updStock->execute([$item['cantidad'], $item['id_producto']]);
+            }
+
+            $this->pdo->commit();
+        } catch (\Exception $e) {
+            $this->pdo->rollBack();
+            throw $e;
         }
 
         return $idPedido;

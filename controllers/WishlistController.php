@@ -36,8 +36,11 @@ class WishlistController
             $this->wishlistModel->anadir($_SESSION['usuario_id'], $idProducto);
         }
 
-        // Volver a la página del producto si viene de ahí
-        $redirect = $_POST['redirect'] ?? ($_GET['redirect'] ?? BASE_URL . '/?action=wishlist');
+        // A3 — Validar redirect para evitar Open Redirect
+        $redirect = $_POST['redirect'] ?? ($_GET['redirect'] ?? '');
+        if (empty($redirect) || (!str_starts_with($redirect, BASE_URL) && !str_starts_with($redirect, '/'))) {
+            $redirect = BASE_URL . '/?action=wishlist';
+        }
         header('Location: ' . $redirect);
         exit;
     }

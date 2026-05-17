@@ -1,6 +1,7 @@
 <?php
 // controllers/AuthController.php
 require_once __DIR__ . '/../config/database.php';
+require_once __DIR__ . '/../config/constants.php';
 require_once __DIR__ . '/../models/User.php';
 
 if (session_status() === PHP_SESSION_NONE) {
@@ -30,32 +31,32 @@ class AuthController
         $pass   = $_POST['contraseña']  ?? '';
         $pass2  = $_POST['contraseña2'] ?? '';
 
-        // Validaciones
-        if (empty($nombre) || empty($email) || empty($pass)) {
-            $_SESSION['error'] = "Todos los campos son obligatorios.";
-            header('Location: /velora_shop/public/?action=register');
+        // M6 — Validar longitud mínima del nombre server-side
+        if (strlen($nombre) < 2 || empty($email) || empty($pass)) {
+            $_SESSION['error'] = "El nombre debe tener al menos 2 caracteres y todos los campos son obligatorios.";
+            header('Location: ' . BASE_URL . '/?action=register');
             exit;
         }
         if ($pass !== $pass2) {
             $_SESSION['error'] = "Las contraseñas no coinciden.";
-            header('Location: /velora_shop/public/?action=register');
+            header('Location: ' . BASE_URL . '/?action=register');
             exit;
         }
         if (strlen($pass) < 6) {
             $_SESSION['error'] = "La contraseña debe tener al menos 6 caracteres.";
-            header('Location: /velora_shop/public/?action=register');
+            header('Location: ' . BASE_URL . '/?action=register');
             exit;
         }
         if (!filter_var($email, FILTER_VALIDATE_EMAIL)) {
             $_SESSION['error'] = "Email no válido.";
-            header('Location: /velora_shop/public/?action=register');
+            header('Location: ' . BASE_URL . '/?action=register');
             exit;
         }
 
         // Email duplicado
         if ($this->userModel->getByEmail($email)) {
             $_SESSION['error'] = "Este email ya está registrado.";
-            header('Location: /velora_shop/public/?action=register');
+            header('Location: ' . BASE_URL . '/?action=register');
             exit;
         }
 
@@ -64,7 +65,7 @@ class AuthController
         $this->userModel->crear($nombre, $email, $hash);
 
         $_SESSION['success'] = "Cuenta creada correctamente. ¡Ya puedes iniciar sesión!";
-        header('Location: /velora_shop/public/?action=login');
+        header('Location: ' . BASE_URL . '/?action=login');
         exit;
     }
 
@@ -84,19 +85,23 @@ class AuthController
 
         if (!$usuario || !password_verify($pass, $usuario['contraseña'])) {
             $_SESSION['error'] = "Email o contraseña incorrectos.";
-            header('Location: /velora_shop/public/?action=login');
+            header('Location: ' . BASE_URL . '/?action=login');
             exit;
         }
 
+        // A6 — Regenerar session ID en el login para prevenir session fixation
+        session_regenerate_id(true);
+
         // Guardar datos en sesión
-        $_SESSION['usuario_id']     = $usuario['id'];
-        $_SESSION['usuario_nombre'] = $usuario['nombre'];
-        $_SESSION['usuario_rol']    = $usuario['rol'];
+        $_SESSION['usuario_id']        = $usuario['id'];
+        $_SESSION['usuario_nombre']    = $usuario['nombre'];
+        $_SESSION['usuario_rol']       = $usuario['rol'];
+        $_SESSION['usuario_direccion'] = $usuario['direccion'] ?? '';
 
         if ($usuario['rol'] === 'admin') {
-            header('Location: /velora_shop/public/?action=admin_dashboard');
+            header('Location: ' . BASE_URL . '/?action=admin_dashboard');
         } else {
-            header('Location: /velora_shop/public/');
+            header('Location: ' . BASE_URL . '/');
         }
         exit;
     }
@@ -105,8 +110,18 @@ class AuthController
 
     public function logout(): void
     {
+        // A6 — Limpiar sesión correctamente y destruir cookie
+        $_SESSION = [];
+        if (ini_get('session.use_cookies')) {
+            $params = session_get_cookie_params();
+            setcookie(
+                session_name(), '', time() - 42000,
+                $params['path'], $params['domain'],
+                $params['secure'], $params['httponly']
+            );
+        }
         session_destroy();
-        header('Location: /velora_shop/public/?action=login');
+        header('Location: ' . BASE_URL . '/?action=login');
         exit;
     }
 }

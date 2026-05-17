@@ -17,8 +17,9 @@ class Cart
         $stmt = $this->pdo->prepare(
             "SELECT c.id, c.cantidad, c.talla,
                     p.id AS id_producto, p.nombre, p.precio,
-                    p.imagen, p.stock,
-                    (c.cantidad * p.precio) AS subtotal
+                    p.precio_oferta, p.imagen, p.stock,
+                    COALESCE(NULLIF(p.precio_oferta, 0), p.precio) AS precio_efectivo,
+                    (c.cantidad * COALESCE(NULLIF(p.precio_oferta, 0), p.precio)) AS subtotal
              FROM carrito c
              JOIN producto p ON c.id_producto = p.id
              WHERE c.id_usuario = ?"

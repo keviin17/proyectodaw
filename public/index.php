@@ -5,8 +5,26 @@
 require_once __DIR__ . '/../config/database.php';
 require_once __DIR__ . '/../config/constants.php';
 
+// Configurar cookies de sesión más seguras
+ini_set('session.cookie_httponly', 1);
+
 if (session_status() === PHP_SESSION_NONE) {
     session_start();
+}
+
+// C4 — Generar token CSRF si no existe
+if (empty($_SESSION['csrf_token'])) {
+    $_SESSION['csrf_token'] = bin2hex(random_bytes(32));
+}
+
+// C4 — Función helper para verificar CSRF en POST
+function verify_csrf(): void
+{
+    $token = $_POST['csrf_token'] ?? '';
+    if (!hash_equals($_SESSION['csrf_token'], $token)) {
+        http_response_code(403);
+        die('Token de seguridad inválido. Recarga la página e inténtalo de nuevo.');
+    }
 }
 
 // Cargar controladores
@@ -25,6 +43,24 @@ require_once __DIR__ . '/../models/Order.php';
 require_once __DIR__ . '/../models/Cart.php';
 require_once __DIR__ . '/../models/Wishlist.php';
 require_once __DIR__ . '/../models/Review.php';
+
+// M5 — Verificar que el usuario activo sigue activo en BD (en cada request)
+if (!empty($_SESSION['usuario_id'])) {
+    $userCheck = new User();
+    $uCheck = $userCheck->getById((int)$_SESSION['usuario_id']);
+    if (!$uCheck || !$uCheck['activo']) {
+        $_SESSION = [];
+        if (ini_get('session.use_cookies')) {
+            $params = session_get_cookie_params();
+            setcookie(session_name(), '', time() - 42000,
+                $params['path'], $params['domain'],
+                $params['secure'], $params['httponly']);
+        }
+        session_destroy();
+        header('Location: ' . BASE_URL . '/?action=login');
+        exit;
+    }
+}
 
 // Leer la acción de la URL: ?action=algo
 $action = $_GET['action'] ?? 'home';
@@ -59,6 +95,9 @@ switch ($action) {
         break;
 
     case 'valorar':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            verify_csrf();
+        }
         $ctrl = new ProductController();
         $ctrl->valorar();
         break;
@@ -84,16 +123,25 @@ switch ($action) {
         break;
 
     case 'carrito_anadir':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            verify_csrf();
+        }
         $ctrl = new CartController();
         $ctrl->anadir();
         break;
 
     case 'carrito_actualizar':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            verify_csrf();
+        }
         $ctrl = new CartController();
         $ctrl->actualizar();
         break;
 
     case 'carrito_eliminar':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            verify_csrf();
+        }
         $ctrl = new CartController();
         $ctrl->eliminar();
         break;
@@ -104,6 +152,9 @@ switch ($action) {
         break;
 
     case 'confirmar_pedido':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            verify_csrf();
+        }
         $ctrl = new OrderController();
         $ctrl->confirmar();
         break;
@@ -117,6 +168,13 @@ switch ($action) {
         $id = (int) ($_GET['id'] ?? 0);
         // Si viene con ?formato=json devuelve JSON para el modal del admin
         if (($_GET['formato'] ?? '') === 'json') {
+            // A2 — Verificar que es admin antes de devolver datos JSON
+            if (empty($_SESSION['usuario_rol']) || $_SESSION['usuario_rol'] !== 'admin') {
+                http_response_code(403);
+                header('Content-Type: application/json');
+                echo json_encode(['error' => 'forbidden']);
+                exit;
+            }
             $orderModel = new Order();
             $pedido     = $orderModel->getById($id);
             $lineas     = $orderModel->getDetalle($id);
@@ -138,7 +196,6 @@ switch ($action) {
 
     case 'wishlist_toggle':
         // AJAX toggle wishlist (sin recarga de página)
-        if (session_status() === PHP_SESSION_NONE) session_start();
         header('Content-Type: application/json');
         if (empty($_SESSION['usuario_id'])) {
             echo json_encode(['error' => 'no_login']);
@@ -165,11 +222,17 @@ switch ($action) {
         break;
 
     case 'wishlist_anadir':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            verify_csrf();
+        }
         $ctrl = new WishlistController();
         $ctrl->anadir();
         break;
 
     case 'wishlist_eliminar':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            verify_csrf();
+        }
         $ctrl = new WishlistController();
         $ctrl->eliminar();
         break;
@@ -184,6 +247,7 @@ switch ($action) {
     case 'perfil_guardar':
         require_login_redirect();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            verify_csrf();
             $userModel = new User();
             $datos = [
                 'nombre'        => trim($_POST['nombre'] ?? ''),
@@ -203,6 +267,7 @@ switch ($action) {
     case 'cambiar_contrasena':
         require_login_redirect();
         if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            verify_csrf();
             $passActual = $_POST['pass_actual'] ?? '';
             $passNueva  = $_POST['pass_nueva']  ?? '';
             $passNueva2 = $_POST['pass_nueva2'] ?? '';
@@ -236,6 +301,9 @@ switch ($action) {
         break;
 
     case 'admin_guardar_producto':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            verify_csrf();
+        }
         $ctrl = new AdminController();
         $ctrl->guardarProducto();
         break;
@@ -251,6 +319,9 @@ switch ($action) {
         break;
 
     case 'admin_cambiar_estado':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            verify_csrf();
+        }
         $ctrl = new AdminController();
         $ctrl->cambiarEstadoPedido();
         break;
@@ -266,6 +337,9 @@ switch ($action) {
         break;
 
     case 'admin_cambiar_rol':
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            verify_csrf();
+        }
         $ctrl = new AdminController();
         $ctrl->cambiarRol();
         break;

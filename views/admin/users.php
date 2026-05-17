@@ -95,8 +95,9 @@ require __DIR__ . '/../layout/header.php';
                                                     </a>
                                                     <!-- Cambiar Rol -->
                                                     <form action="<?= BASE_URL ?>/?action=admin_cambiar_rol" method="POST"
-                                                        class="d-inline-flex align-items-center gap-1"
-                                                        onsubmit="return confirm('¿Cambiar el rol de este usuario?')">
+                                                          class="d-inline-flex align-items-center gap-1"
+                                                          onsubmit="return confirm('¿Cambiar el rol de este usuario?')">
+                                                        <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                                                         <input type="hidden" name="id" value="<?= $u['id'] ?>">
                                                         <select name="rol" class="form-select form-select-sm" style="width:auto; min-width:90px;">
                                                             <option value="cliente" <?= $u['rol'] === 'cliente' ? 'selected' : '' ?>>Cliente</option>

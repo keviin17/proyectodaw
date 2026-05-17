@@ -19,6 +19,7 @@ require __DIR__ . '/../layout/header.php';
         <!-- Formulario de envío y pago -->
         <div class="col-lg-7">
             <form action="<?= BASE_URL ?>/?action=confirmar_pedido" method="POST" id="formCheckout">
+                <input type="hidden" name="csrf_token" value="<?= htmlspecialchars($_SESSION['csrf_token'] ?? '') ?>">
                 <!-- Datos de envío -->
                 <div class="card shadow-sm border-0 mb-4">
                     <div class="card-header bg-dark text-white fw-bold">
