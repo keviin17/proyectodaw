@@ -47,7 +47,7 @@ require __DIR__ . '/../layout/header.php';
                                         <tr>
                                             <td>
                                                 <div class="d-flex align-items-center gap-3">
-                                                    <img src="<?= BASE_URL ?>/assets/img/products/<?= htmlspecialchars($item['imagen'] ?? 'default.jpg') ?>"
+                                                    <img src="<?= BASE_URL ?>/../assets/img/products/<?= htmlspecialchars($item['imagen'] ?? 'default.jpg') ?>"
                                                          width="60" height="60"
                                                          style="object-fit:cover; border-radius:8px;">
                                                     <a href="<?= BASE_URL ?>/?action=producto&id=<?= $item['id_producto'] ?>"

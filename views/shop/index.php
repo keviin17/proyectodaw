@@ -104,7 +104,7 @@ require __DIR__ . '/../layout/header.php';
                                 ⭐ Destacado
                             </span>
                         <?php endif; ?>
-                        <img src="<?= BASE_URL ?>/assets/img/products/<?= htmlspecialchars($p['imagen'] ?? 'default.jpg') ?>"
+                        <img src="<?= BASE_URL ?>/../assets/img/products/<?= htmlspecialchars($p['imagen'] ?? 'default.jpg') ?>"
                             class="card-img-top"
                             alt="<?= htmlspecialchars($p['nombre']) ?>"
                             style="height:220px; object-fit:cover;">

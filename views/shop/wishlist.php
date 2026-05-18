@@ -25,7 +25,7 @@ require __DIR__ . '/../layout/header.php';
                 <div class="col" id="wish-card-<?= $p['id_producto'] ?>">
                     <div class="card h-100 shadow-sm product-card">
                         <div class="position-relative">
-                            <img src="<?= BASE_URL ?>/assets/img/products/<?= htmlspecialchars($p['imagen'] ?? 'default.jpg') ?>"
+                            <img src="<?= BASE_URL ?>/../assets/img/products/<?= htmlspecialchars($p['imagen'] ?? 'default.jpg') ?>"
                                  class="card-img-top"
                                  alt="<?= htmlspecialchars($p['nombre']) ?>"
                                  style="height:220px; object-fit:cover;">
