@@ -44,7 +44,7 @@ require __DIR__ . '/../layout/header.php';
     <div class="row g-4">
         <!-- Imagen del producto -->
         <div class="col-md-5 text-center">
-            <img src="<?= BASE_URL ?>/../assets/img/products/<?= htmlspecialchars($producto['imagen'] ?? 'default.jpg') ?>"
+            <img src="<?= BASE_URL ?>/assets/img/products/<?= htmlspecialchars($producto['imagen'] ?? 'default.jpg') ?>"
                  class="img-fluid rounded shadow"
                  alt="<?= htmlspecialchars($producto['nombre']) ?>"
                  style="max-height:420px; object-fit:cover; width:100%;">

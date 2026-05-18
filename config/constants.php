@@ -3,13 +3,13 @@
 // Constantes globales de la aplicación Velora Shop
 
 define('APP_NAME', 'Velora Shop');
-define('BASE_URL', 'http://localhost/velora_shop/public');
+define('BASE_URL', 'https://proyectodaw.org.es');
 define('BASE_PATH', dirname(__DIR__));
 
 // Rutas de assets
 define('ASSETS_PATH', BASE_PATH . '/assets');
 define('IMG_PRODUCTS_PATH', ASSETS_PATH . '/img/products');
-define('IMG_PRODUCTS_URL', BASE_URL . '/../assets/img/products');
+define('IMG_PRODUCTS_URL', BASE_URL . '/assets/img/products');
 
 // Subcarpetas de imágenes por género (deben coincidir con el enum de categoria.genero)
 define('IMG_PRODUCTS_SUBFOLDERS', [
