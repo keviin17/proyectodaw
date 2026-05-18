@@ -24,11 +24,21 @@ define('BASE_PATH', dirname(__DIR__));
 define('ASSETS_PATH', BASE_PATH . '/assets');
 define('IMG_PRODUCTS_PATH', ASSETS_PATH . '/img/products');
 
-// ASSETS_URL: sube un nivel desde /public hacia /assets (válido en local y producción).
-// En producción si el DocumentRoot ES /public, BASE_URL no tendrá subfolder;
-// el servidor debe tener un Alias/symlink o estar configurado para servir /assets.
-// La notación /../ la resuelve el navegador correctamente en ambos entornos.
-define('ASSETS_URL', BASE_URL . '/../assets');
+// ASSETS_URL: calculada desde DOCUMENT_ROOT, nunca usa /../
+// Local (XAMPP):    http://localhost/velora_shop/assets
+// Producción (AWS): https://proyectodaw.org.es/assets
+if (!defined('ASSETS_URL')) {
+    $_au_scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $_au_host   = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $_au_docRoot    = rtrim(str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT'] ?? ''), '/');
+    $_au_assetsPath = str_replace('\\', '/', BASE_PATH . '/assets');
+    // Eliminar el docRoot del comienzo para obtener la ruta URL
+    $_au_urlPath = $_au_docRoot !== ''
+        ? str_replace($_au_docRoot, '', $_au_assetsPath)
+        : '/assets';
+    define('ASSETS_URL', $_au_scheme . '://' . $_au_host . $_au_urlPath);
+    unset($_au_scheme, $_au_host, $_au_docRoot, $_au_assetsPath, $_au_urlPath);
+}
 define('IMG_PRODUCTS_URL', ASSETS_URL . '/img/products');
 
 // Subcarpetas de imágenes por género (deben coincidir con el enum de categoria.genero)

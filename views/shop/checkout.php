@@ -95,7 +95,7 @@ require __DIR__ . '/../layout/header.php';
                     <ul class="list-group list-group-flush">
                         <?php foreach ($items as $item): ?>
                             <li class="list-group-item d-flex align-items-center gap-3 py-3">
-                                <img src="<?= BASE_URL ?>/../assets/img/products/<?= htmlspecialchars($item['imagen'] ?? 'default.jpg') ?>"
+                                <img src="<?= IMG_PRODUCTS_URL ?>/<?= htmlspecialchars($item['imagen'] ?? 'default.jpg') ?>"
                                      width="50" height="50"
                                      style="object-fit:cover; border-radius:6px;">
                                 <div class="flex-grow-1">

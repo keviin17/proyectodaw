@@ -13,7 +13,7 @@ $pageTitle = 'Crear Cuenta';
     <title><?= $pageTitle ?> — Velora Shop</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
-    <link href="<?= BASE_URL ?>/../assets/css/style.css" rel="stylesheet">
+    <link href="<?= ASSETS_URL ?>/css/style.css" rel="stylesheet">
 </head>
 <body class="bg-light">
 
@@ -128,7 +128,7 @@ $pageTitle = 'Crear Cuenta';
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
-<script src="<?= BASE_URL ?>/../assets/js/main.js"></script>
+<script src="<?= ASSETS_URL ?>/js/main.js"></script>
 <script>
     // Mostrar/ocultar contraseña
     document.getElementById('togglePass1').addEventListener('click', function () {

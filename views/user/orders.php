@@ -63,7 +63,7 @@ require __DIR__ . '/../layout/header.php';
                                 <tr>
                                     <td>
                                         <div class="d-flex align-items-center gap-2">
-                                            <img src="<?= BASE_URL ?>/../assets/img/products/<?= htmlspecialchars($l['imagen'] ?? 'default.jpg') ?>"
+                                            <img src="<?= IMG_PRODUCTS_URL ?>/<?= htmlspecialchars($l['imagen'] ?? 'default.jpg') ?>"
                                                  width="40" height="40" style="object-fit:cover; border-radius:4px;">
                                             <?= htmlspecialchars($l['nombre']) ?>
                                         </div>
