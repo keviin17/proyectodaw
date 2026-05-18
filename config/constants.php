@@ -24,20 +24,17 @@ define('BASE_PATH', dirname(__DIR__));
 define('ASSETS_PATH', BASE_PATH . '/assets');
 define('IMG_PRODUCTS_PATH', ASSETS_PATH . '/img/products');
 
-// ASSETS_URL: calculada desde DOCUMENT_ROOT, nunca usa /../
-// Local (XAMPP):    http://localhost/velora_shop/assets
-// Producción (AWS): https://proyectodaw.org.es/assets
+// ASSETS_URL: ruta desde la raíz del dominio
+// Funciona en producción (https://proyectodaw.org.es/assets)
+// y en local XAMPP (http://localhost/velora_shop/assets)
 if (!defined('ASSETS_URL')) {
-    $_au_scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
-    $_au_host   = $_SERVER['HTTP_HOST'] ?? 'localhost';
-    $_au_docRoot    = rtrim(str_replace('\\', '/', $_SERVER['DOCUMENT_ROOT'] ?? ''), '/');
-    $_au_assetsPath = str_replace('\\', '/', BASE_PATH . '/assets');
-    // Eliminar el docRoot del comienzo para obtener la ruta URL
-    $_au_urlPath = $_au_docRoot !== ''
-        ? str_replace($_au_docRoot, '', $_au_assetsPath)
-        : '/assets';
-    define('ASSETS_URL', $_au_scheme . '://' . $_au_host . $_au_urlPath);
-    unset($_au_scheme, $_au_host, $_au_docRoot, $_au_assetsPath, $_au_urlPath);
+    $scheme = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? 'https' : 'http';
+    $host   = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    // Subir un nivel desde /public para obtener la raíz del proyecto como URL
+    $publicDir  = rtrim(str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME'])), '/');
+    $projectDir = dirname($publicDir); // sube de /public a /
+    $projectDir = ($projectDir === '.' || $projectDir === '/') ? '' : $projectDir;
+    define('ASSETS_URL', $scheme . '://' . $host . $projectDir . '/assets');
 }
 define('IMG_PRODUCTS_URL', ASSETS_URL . '/img/products');
 
